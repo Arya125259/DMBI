@@ -1,0 +1,131 @@
+📚 2. THEORY (SHORT)
+⭐ Star Schema
+Central Fact table
+Surrounding Dimension tables
+Denormalized structure
+Faster queries
+❄️ Snowflake Schema
+Extension of star schema
+Dimension tables are normalized
+More tables, more joins, less redundancy
+🛠️ 3. STEP 1: CREATE DATABASE
+CREATE DATABASE DataWarehouse;
+GO
+
+USE DataWarehouse;
+GO
+⭐ PART A: STAR SCHEMA
+🧱 STEP 2: CREATE DIMENSION TABLES
+Customer Dimension
+CREATE TABLE DimCustomer (
+    CustomerID INT PRIMARY KEY,
+    CustomerName VARCHAR(100),
+    City VARCHAR(50),
+    Country VARCHAR(50)
+);
+Product Dimension
+CREATE TABLE DimProduct (
+    ProductID INT PRIMARY KEY,
+    ProductName VARCHAR(100),
+    Category VARCHAR(50)
+);
+Time Dimension
+CREATE TABLE DimTime (
+    TimeID INT PRIMARY KEY,
+    Date DATE,
+    Month VARCHAR(20),
+    Year INT
+);
+🧮 STEP 3: CREATE FACT TABLE
+CREATE TABLE FactSales (
+    SalesID INT PRIMARY KEY,
+    CustomerID INT,
+    ProductID INT,
+    TimeID INT,
+    Quantity INT,
+    Amount DECIMAL(10,2),
+
+    FOREIGN KEY (CustomerID) REFERENCES DimCustomer(CustomerID),
+    FOREIGN KEY (ProductID) REFERENCES DimProduct(ProductID),
+    FOREIGN KEY (TimeID) REFERENCES DimTime(TimeID)
+);
+📥 STEP 4: INSERT DATA (STAR SCHEMA)
+INSERT INTO DimCustomer VALUES (1, 'Arya', 'Mumbai', 'India');
+INSERT INTO DimProduct VALUES (101, 'Laptop', 'Electronics');
+INSERT INTO DimTime VALUES (1001, '2026-04-19', 'April', 2026);
+
+INSERT INTO FactSales VALUES (1, 1, 101, 1001, 2, 120000);
+📊 STEP 5: STAR SCHEMA QUERY
+SELECT 
+    c.CustomerName,
+    p.ProductName,
+    t.Year,
+    f.Amount
+FROM FactSales f
+JOIN DimCustomer c ON f.CustomerID = c.CustomerID
+JOIN DimProduct p ON f.ProductID = p.ProductID
+JOIN DimTime t ON f.TimeID = t.TimeID;
+❄️ PART B: SNOWFLAKE SCHEMA
+🧱 STEP 6: NORMALIZED TABLES
+Category Table
+CREATE TABLE DimCategory (
+    CategoryID INT PRIMARY KEY,
+    CategoryName VARCHAR(50)
+);
+Product Table (Normalized)
+CREATE TABLE DimProduct_SF (
+    ProductID INT PRIMARY KEY,
+    ProductName VARCHAR(100),
+    CategoryID INT,
+    FOREIGN KEY (CategoryID) REFERENCES DimCategory(CategoryID)
+);
+Location Table
+CREATE TABLE DimLocation (
+    LocationID INT PRIMARY KEY,
+    City VARCHAR(50),
+    Country VARCHAR(50)
+);
+Customer Table (Normalized)
+CREATE TABLE DimCustomer_SF (
+    CustomerID INT PRIMARY KEY,
+    CustomerName VARCHAR(100),
+    LocationID INT,
+    FOREIGN KEY (LocationID) REFERENCES DimLocation(LocationID)
+);
+Fact Table
+CREATE TABLE FactSales_SF (
+    SalesID INT PRIMARY KEY,
+    CustomerID INT,
+    ProductID INT,
+    TimeID INT,
+    Quantity INT,
+    Amount DECIMAL(10,2),
+
+    FOREIGN KEY (CustomerID) REFERENCES DimCustomer_SF(CustomerID),
+    FOREIGN KEY (ProductID) REFERENCES DimProduct_SF(ProductID),
+    FOREIGN KEY (TimeID) REFERENCES DimTime(TimeID)
+);
+📥 STEP 7: INSERT DATA (SNOWFLAKE)
+INSERT INTO DimCategory VALUES (1, 'Electronics');
+INSERT INTO DimLocation VALUES (1, 'Mumbai', 'India');
+
+INSERT INTO DimProduct_SF VALUES (101, 'Laptop', 1);
+INSERT INTO DimCustomer_SF VALUES (1, 'Arya', 1);
+
+INSERT INTO DimTime VALUES (1001, '2026-04-19', 'April', 2026);
+
+INSERT INTO FactSales_SF VALUES (1, 1, 101, 1001, 2, 120000);
+📊 STEP 8: SNOWFLAKE QUERY
+SELECT 
+    c.CustomerName,
+    p.ProductName,
+    cat.CategoryName,
+    loc.City,
+    t.Year,
+    f.Amount
+FROM FactSales_SF f
+JOIN DimCustomer_SF c ON f.CustomerID = c.CustomerID
+JOIN DimLocation loc ON c.LocationID = loc.LocationID
+JOIN DimProduct_SF p ON f.ProductID = p.ProductID
+JOIN DimCategory cat ON p.CategoryID = cat.CategoryID
+JOIN DimTime t ON f.TimeID = t.TimeID;

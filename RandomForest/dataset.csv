@@ -1,0 +1,11 @@
+ID,Age,Income,Student,Credit,Buy
+1,25,High,No,Fair,No
+2,30,High,No,Excellent,No
+3,35,High,No,Fair,Yes
+4,40,Medium,No,Fair,Yes
+5,60,Low,Yes,Fair,Yes
+6,65,Low,Yes,Excellent,No
+7,45,Low,Yes,Excellent,Yes
+8,28,Medium,No,Fair,No
+9,22,Low,Yes,Fair,Yes
+10,55,Medium,Yes,Fair,Yes

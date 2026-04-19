@@ -1,0 +1,16 @@
+Age,Income,Student,Credit,Purchase
+22,Low,Yes,Excellent,No
+25,High,No,Excellent,Yes
+28,Medium,Yes,Fair,Yes
+30,High,Yes,Excellent,Yes
+35,Low,No,Fair,No
+40,High,No,Excellent,Yes
+23,Low,Yes,Fair,No
+32,Medium,No,Fair,No
+38,High,Yes,Excellent,Yes
+27,Medium,Yes,Excellent,Yes
+45,Low,No,Excellent,No
+29,High,Yes,Fair,Yes
+31,Medium,No,Excellent,Yes
+26,Low,Yes,Fair,No
+36,High,No,Fair,Yes

@@ -1,0 +1,113 @@
+📊 COMPLETE GUIDE: SQL Server + Power BI Experiment
+🧩 PART 1: Install Required Software
+1️⃣ Install Database Server
+
+Download and install:
+👉 Microsoft SQL Server Express
+
+During setup:
+Choose Basic Installation
+Keep default settings
+Instance name will be: SQLEXPRESS
+2️⃣ Install Database Tool
+
+Download:
+👉 SQL Server Management Studio (SSMS)
+
+👉 This is where you create database & tables
+
+3️⃣ Install Visualization Tool
+
+Download:
+👉 Microsoft Power BI Desktop
+
+🧩 PART 2: Create Database
+Step 1: Open SSMS
+Launch SSMS
+Step 2: Connect to Server
+Server name → .\SQLEXPRESS
+Authentication → Windows
+Click Connect
+Step 3: Create Database
+Right click Databases
+Click New Database
+
+Name:
+
+CompanyDB
+Click OK
+Step 4: Create Employees Table
+
+Click New Query and run:
+
+CREATE TABLE Employees (
+    EmployeeID INT PRIMARY KEY,
+    FirstName VARCHAR(50),
+    LastName VARCHAR(50),
+    Country VARCHAR(50),
+    Qualification VARCHAR(50)
+);
+
+Click Execute
+
+Step 5: Insert Sample Data
+INSERT INTO Employees VALUES
+(1,'Amit','Shah','India','B.Tech'),
+(2,'John','Doe','USA','MBA'),
+(3,'Sara','Ali','India','M.Tech'),
+(4,'David','Lee','UK','B.Tech'),
+(5,'Priya','Patel','India','MBA');
+
+Click Execute
+
+Step 6: Verify Data
+
+Go to:
+
+Databases → CompanyDB → Tables → Employees
+Right click → Select Top 1000 Rows
+
+👉 Data should be visible ✔
+
+🧩 PART 3: Connect Power BI to Database
+Step 1: Open Power BI
+
+Open Power BI Desktop
+
+Step 2: Connect to SQL Server
+Click Get Data
+Select SQL Server
+Enter:
+Server → .\SQLEXPRESS
+Choose:
+✅ Import
+Click OK
+Step 3: Authentication
+Choose Windows (Current Credentials)
+Click Connect
+
+👉 If encryption error comes → click OK
+
+Step 4: Load Table
+Select Employees
+Click Load
+🧩 PART 4: Create Visualizations
+📊 1. Pie Chart (Distribution)
+Select Pie Chart
+Drag:
+Country → Legend
+EmployeeID → Values (Count)
+📊 2. Bar Chart (Comparison)
+Select Bar Chart
+Drag:
+Country → Axis
+EmployeeID → Values
+📊 3. Stacked Chart (Advanced)
+Axis → Qualification
+Legend → Country
+Values → Count of EmployeeID
+🧩 PART 5: Final Dashboard
+Arrange charts neatly
+Add titles:
+“Employee Distribution by Country”
+“Employees by Qualification”

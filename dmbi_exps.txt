@@ -1,0 +1,1111 @@
+EXP 1: To export and import data to and from MS SQL Server
+
+1) Install MS SQL SERVER MANAGEMENT STUDIO INSTALLER 
+	> Download SQL server express edition :- https://www.microsoft.com/en-in/sql-server/sql-server-downloads
+	>install MS SQL Server management studio:- https://learn.microsoft.com/en-us/ssms/install/install
+	>visual studio installer will get installed open it and select all the components and click on install 
+	> Download SQL server express edition :- https://www.microsoft.com/en-in/sql-server/sql-server-downloads
+
+2) Once opened a pop up will open "Connect" if not click on new query on top left 2nd row 
+	>in the "Server name" field type in your System name + \SQLEXPRESS (Get system name from :- in settings > System > About > Device name)  
+		example :- LAPTOP-LOLGSQ9L\SQLEXPRESS
+	> Set Authentication → Windows Authentication
+	> Tick ✔ Trust Server Certificate
+
+3) Create Database
+	> In Object Explorer → Right-click "Databases"
+	> Click "New Database"
+	> Enter database name → DMBI
+	> Click OK
+
+4) Create Table
+	> Expand Databases → DMBI
+	> Right-click "Tables" → New → Table
+
+	> Add columns:
+  		 id   → int
+   		name → varchar(50)
+   		age  → int
+
+	> Press Ctrl + S to save
+	> Enter table name → students
+5) Insert Data into Table
+	> Right-click "students" → Edit Top 200 Rows
+
+	> Enter data:
+   	1   Rahul   20
+   	2   Sneha   21
+   	3   Amit    22
+
+6) Export Table Data
+	> Right-click "students" → Select Top 1000 Rows
+
+	> In result grid:
+   		Right-click → Save Results As
+
+	> Choose location (Desktop)
+	> File name → students.csv
+	> Save as type → CSV
+
+7) Prepare CSV File
+	> Open students.csv in Notepad / Excel
+	> Ensure first row is header:
+   		id,name,age
+  		 1,Rahul,20
+   		2,Sneha,21
+   		3,Amit,22
+	> Save and close file
+
+8) Create New Table for Import
+	> Click "New Query"
+
+	> Run:
+		CREATE TABLE students_imported (
+   		id INT,
+    		name VARCHAR(50),
+   		 age INT
+		);
+
+9) Import Data using BULK INSERT
+	> Run:
+		BULK INSERT students_imported
+		FROM 'C:\Users\Siddhesh\Desktop\students.csv'
+		WITH (
+    		FIRSTROW = 2,
+    		FIELDTERMINATOR = ',',
+    		ROWTERMINATOR = '\n'
+		);
+10)Verify Imported Data
+	> Run:
+		SELECT * FROM students_imported;
+		You should see the id,names,age of students that we previously entered
+
+11) RESULTS 
+	> Data successfully exported to CSV file
+	> Data successfully imported into SQL Server table
+------------------------------------------------------------------------------------------------------------------
+2	To receive data by Kafka and store it in a database
+
+-----------------------------------------------------------------------------------------------------------------
+EXP 3: To create a Star and Snowflake schema on MS SQL Server.
+
+🛠️ REQUIREMENTS
+MS SQL Server
+SQL Server Management Studio (SSMS)
+
+📝 PROCEDURE
+1) Install MS SQL (if not already installed)
+> Follow installation steps from Experiment 1
+
+2) Connect to SQL Server
+> Open SSMS
+> Enter Server Name → localhost\SQLEXPRESS
+> Authentication → Windows Authentication
+> Tick ✔ Trust Server Certificate
+
+3) Select Database
+> Select DMBI database from dropdown
+
+🟢 PART 3: Create STAR SCHEMA
+
+⭐ Step 3: Create Dimension Tables
+> Open New Query → Execute:
+CREATE TABLE Dim_Product (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(50),
+    category VARCHAR(50)
+);
+
+CREATE TABLE Dim_Customer (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(50),
+    city VARCHAR(50)
+);
+
+CREATE TABLE Dim_Time (
+    time_id INT PRIMARY KEY,
+    year INT,
+    month INT
+);
+
+⭐ Step 4: Create Fact Table
+
+CREATE TABLE Fact_Sales (
+    sale_id INT PRIMARY KEY,
+    product_id INT,
+    customer_id INT,
+    time_id INT,
+    amount INT,
+    FOREIGN KEY (product_id) REFERENCES Dim_Product(product_id),
+    FOREIGN KEY (customer_id) REFERENCES Dim_Customer(customer_id),
+    FOREIGN KEY (time_id) REFERENCES Dim_Time(time_id)
+);
+
+⭐ Step 5: Insert Sample Data (ADDED ✅)
+
+INSERT INTO Dim_Product VALUES (1, 'Laptop', 'Electronics');
+
+INSERT INTO Dim_Customer VALUES (1, 'Sid', 'Mumbai');
+
+INSERT INTO Dim_Time VALUES (1, 2026, 4);
+
+INSERT INTO Fact_Sales VALUES (1, 1, 1, 1, 120000);
+
+⭐ Step 6: Query Star Schema (ADDED ✅)
+
+SELECT 
+    c.customer_name,
+    p.product_name,
+    t.year,
+    f.amount
+FROM Fact_Sales f
+JOIN Dim_Customer c ON f.customer_id = c.customer_id
+JOIN Dim_Product p ON f.product_id = p.product_id
+JOIN Dim_Time t ON f.time_id = t.time_id;
+
+👉 Output:
+
+Sid | Laptop | 2026 | 120000
+⭐ Step 7: Verify Tables
+> Right-click Tables → Refresh
+🧠 STAR SCHEMA DIAGRAM
+        Dim_Product
+             |
+Dim_Customer — Fact_Sales — Dim_Time
+🟢 PART 4: Create SNOWFLAKE SCHEMA
+❄️ Step 8: Create Normalized Tables
+CREATE TABLE Dim_Category (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR(50)
+);
+
+CREATE TABLE Dim_Product_SF (
+    product_id INT PRIMARY KEY,
+    product_name VARCHAR(50),
+    category_id INT,
+    FOREIGN KEY (category_id) REFERENCES Dim_Category(category_id)
+);
+
+CREATE TABLE Dim_City (
+    city_id INT PRIMARY KEY,
+    city_name VARCHAR(50)
+);
+
+CREATE TABLE Dim_Customer_SF (
+    customer_id INT PRIMARY KEY,
+    customer_name VARCHAR(50),
+    city_id INT,
+    FOREIGN KEY (city_id) REFERENCES Dim_City(city_id)
+);
+
+CREATE TABLE Dim_Time_SF (
+    time_id INT PRIMARY KEY,
+    year INT,
+    month INT
+);
+
+❄️ Step 9: Create Fact Table
+
+CREATE TABLE Fact_Sales_SF (
+    sale_id INT PRIMARY KEY,
+    product_id INT,
+    customer_id INT,
+    time_id INT,
+    amount INT,
+    FOREIGN KEY (product_id) REFERENCES Dim_Product_SF(product_id),
+    FOREIGN KEY (customer_id) REFERENCES Dim_Customer_SF(customer_id),
+    FOREIGN KEY (time_id) REFERENCES Dim_Time_SF(time_id)
+);
+
+❄️ Step 10: Insert Sample Data 
+
+INSERT INTO Dim_Category VALUES (1, 'Electronics');
+
+INSERT INTO Dim_Product_SF VALUES (1, 'Laptop', 1);
+
+INSERT INTO Dim_City VALUES (1, 'Mumbai');
+
+INSERT INTO Dim_Customer_SF VALUES (1, 'Sid', 1);
+
+INSERT INTO Dim_Time_SF VALUES (1, 2026, 4);
+
+INSERT INTO Fact_Sales_SF VALUES (1, 1, 1, 1, 120000);
+
+❄️ Step 11: Query Snowflake Schema (ADDED ✅)
+
+SELECT 
+    c.customer_name,
+    ci.city_name,
+    p.product_name,
+    cat.category_name,
+    t.year,
+    f.amount
+FROM Fact_Sales_SF f
+JOIN Dim_Customer_SF c ON f.customer_id = c.customer_id
+JOIN Dim_City ci ON c.city_id = ci.city_id
+JOIN Dim_Product_SF p ON f.product_id = p.product_id
+JOIN Dim_Category cat ON p.category_id = cat.category_id
+JOIN Dim_Time_SF t ON f.time_id = t.time_id;
+
+👉 Output:
+
+Sid | Mumbai | Laptop | Electronics | 2026 | 120000
+
+❄️ Step 12: Verify Tables
+
+> Right-click Tables → Refresh
+🧠 SNOWFLAKE SCHEMA DIAGRAM
+        Dim_Category
+             |
+       Dim_Product_SF
+             |
+Dim_Customer_SF — Fact_Sales_SF — Dim_Time_SF
+             |
+         Dim_City
+
+✅ RESULT
+Star Schema and Snowflake Schema were successfully created and queried in MS SQL Server.
+
+🧠 CONCLUSION (UPDATED)
+Star schema uses fewer joins and is faster, while snowflake schema uses normalized tables, reducing redundancy but requiring more joins.
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXP 4: To implement a Decision tree.
+
+🟢 PART 1: Setup Environment
+1) Open Visual Studio Code
+
+OR you can use:
+
+Notepad + Command Prompt
+
+2) Create Project Folder
+> Create a new folder on Desktop
+> Name it: decision_tree
+
+3) Create Python File
+> Open folder in VS Code
+> Create new file
+> Name: decision_tree.py
+
+🟢 PART 2: Add Code
+
+4) Paste the Code
+
+👉 Copy the final optimized code I gave you into decision_tree.py
+
+🟢 PART 3: Create Dataset File
+
+5) Create CSV File
+> In same folder
+> Create new file: dataset.csv
+
+6) Paste this data EXACTLY
+Age,Income,Student,CreditRating,BuysComputer
+<=30,High,No,Fair,No
+<=30,High,No,Excellent,No
+31-40,High,No,Fair,Yes
+>40,Medium,No,Fair,Yes
+>40,Low,Yes,Fair,Yes
+>40,Low,Yes,Excellent,No
+31-40,Low,Yes,Excellent,Yes
+<=30,Medium,No,Fair,No
+<=30,Low,Yes,Fair,Yes
+>40,Medium,Yes,Fair,Yes
+<=30,Medium,Yes,Excellent,Yes
+31-40,Medium,No,Excellent,Yes
+31-40,High,Yes,Fair,Yes
+>40,Medium,No,Excellent,No
+
+👉 Save file
+
+🟢 PART 4: Run the Program
+
+7) Open Terminal in VS Code
+
+Click:
+
+Terminal → New Terminal
+
+8) Run program
+
+python decision_tree.py
+
+🟢 PART 5: Output
+
+✔ You will see:
+Decision Tree (structure)
+Decision Tree:
+{'Age': {'<=30': ..., '31-40': 'Yes', '>40': ...}}
+✔ Prediction output
+Prediction: Yes
+🧠 What is happening (VERY SIMPLE)
+Program reads data from CSV
+Calculates entropy
+Chooses best feature
+Builds tree
+Predicts result
+🧠 VIVA (VERY IMPORTANT)
+❓ What is Decision Tree?
+
+👉 A tree-based model used for classification
+
+❓ Which algorithm used?
+
+👉 ID3 (based on entropy)
+
+❓ What is Entropy?
+
+👉 Measure of impurity/randomness
+
+❓ What is Information Gain?
+
+👉 Reduction in entropy after split
+
+❓ Why Decision Tree?
+
+👉 Easy to understand and interpret
+
+⚠️ Common Mistakes (EXAM!)
+❌ Wrong CSV format
+❌ File name mismatch
+❌ CSV not in same folder
+❌ Python not installed
+🎯 RESULT
+Decision Tree was successfully implemented using Python.
+🔥 Final Advice
+
+👉 If lab exam:
+
+Run code → show output
+Explain entropy + tree
+
+👉 If written exam:
+
+Write algorithm steps
+Draw small tree
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+E5: To implement a Bayesian classifier without using library functions.
+
+🟢 PART 1: Setup
+1) Open Visual Studio Code
+
+(or Notepad + Command Prompt)
+
+2) Create folder
+> Create folder on Desktop
+> Name: naive_bayes
+3) Create Python file
+> Open folder in VS Code
+> Create file: naive_bayes.py
+🟢 PART 2: Add Code
+4) Paste this code
+import csv
+
+def load_csv(filename):
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        headers = next(reader)
+        data = [row for row in reader]
+    return headers, data
+
+def class_counts(data):
+    counts = {}
+    for row in data:
+        label = row[-1]
+        counts[label] = counts.get(label, 0) + 1
+    return counts
+
+def attr_given_class(data, attr_index, attr_value, class_value):
+    count = 1  # Laplace smoothing
+    total = 0
+    unique_vals = set()
+
+    for row in data:
+        if row[-1] == class_value:
+            total += 1
+            unique_vals.add(row[attr_index])
+            if row[attr_index] == attr_value:
+                count += 1
+
+    return count / (total + len(unique_vals))
+
+def predict_naive_bayes(data, headers, input_row):
+    labels = class_counts(data)
+    total_rows = len(data)
+    probs = {}
+
+    for label in labels:
+        prob = labels[label] / total_rows
+
+        for i in range(len(input_row)):
+            prob *= attr_given_class(data, i, input_row[i], label)
+
+        probs[label] = prob
+
+    print("Class Probabilities:", probs)
+    return max(probs, key=probs.get)
+
+# -------- RUN --------
+
+headers, data = load_csv("dataset.csv")
+
+test_row = ["<=30", "High", "No", "Fair"]
+
+prediction = predict_naive_bayes(data, headers[:-1], test_row)
+
+print("Prediction:", prediction)
+🟢 PART 3: Create Dataset
+5) Create CSV file
+> In same folder
+> Create: dataset.csv
+6) Paste EXACT data
+Age,Income,Student,CreditRating,BuysComputer
+<=30,High,No,Fair,No
+<=30,High,No,Excellent,No
+31-40,High,No,Fair,Yes
+>40,Medium,No,Fair,Yes
+>40,Low,Yes,Fair,Yes
+>40,Low,Yes,Excellent,No
+31-40,Low,Yes,Excellent,Yes
+<=30,Medium,No,Fair,No
+<=30,Low,Yes,Fair,Yes
+>40,Medium,Yes,Fair,Yes
+<=30,Medium,Yes,Excellent,Yes
+31-40,Medium,No,Excellent,Yes
+31-40,High,Yes,Fair,Yes
+>40,Medium,No,Excellent,No
+
+👉 Save file
+
+🟢 PART 4: Run Program
+7) Open Terminal
+Terminal → New Terminal
+8) Run command
+python naive_bayes.py
+🟢 PART 5: Output
+✔ You will see:
+Class Probabilities: {'No': 0.000..., 'Yes': 0.00...}
+Prediction: Yes
+🧠 What is happening (simple)
+Reads dataset
+Calculates probability for each class
+Multiplies probabilities
+Chooses highest → prediction
+🧠 VIVA (VERY IMPORTANT)
+❓ What is Naive Bayes?
+
+👉 Probabilistic classifier based on Bayes theorem
+
+❓ Why “Naive”?
+
+👉 Assumes all features are independent
+
+❓ Formula?
+
+👉
+P(Class | X) ∝ P(Class) × P(X₁|Class) × P(X₂|Class)...
+
+❓ Why Laplace smoothing?
+
+👉 Avoids zero probability problem
+
+❓ Advantage?
+
+👉 Fast and simple
+
+⚠️ Common Errors
+❌ CSV not in same folder
+❌ Wrong file name
+❌ Missing commas in dataset
+❌ Python not installed
+🎯 RESULT
+Naive Bayes classifier was successfully implemented using Python.
+🔥 Final Tip
+
+👉 If examiner asks difference:
+
+Decision Tree	Naive Bayes
+Tree-based	Probability-based
+Uses entropy	Uses Bayes theorem
+No independence assumption	Assumes independence
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+EXP 6:To implement a Bayesian belief network without using library functions
+
+🟢 PART 1: Setup
+
+1) Open Visual Studio Code
+
+(or Notepad + Command Prompt)
+
+2) Create folder
+> Create a folder on Desktop
+> Name: bayesian_network
+
+3) Create Python file
+> Open folder in VS Code
+> Create file: bbn.py
+
+🟢 PART 2: Add Code
+
+4) Paste this code
+import csv
+
+def load_csv(filename):
+    with open(filename, 'r') as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+        data = [row for row in reader]
+    return headers, data
+
+def conditional_prob(data, headers, conditions, target_value):
+    match_count = 0
+    target_match = 0
+
+    for row in data:
+        match = True
+        for attr, val in conditions.items():
+            index = headers.index(attr)
+            if row[index] != val:
+                match = False
+                break
+
+        if match:
+            match_count += 1
+            if row[-1] == target_value:
+                target_match += 1
+
+    # Laplace smoothing
+    return (target_match + 1) / (match_count + 2)
+
+# -------- RUN --------
+
+headers, data = load_csv("dataset.csv")
+
+conditions = {
+    "Student": "Yes",
+    "CreditRating": "Fair"
+}
+
+p_yes = conditional_prob(data, headers, conditions, "Yes")
+p_no = conditional_prob(data, headers, conditions, "No")
+
+print(f"P(Yes | conditions) = {p_yes:.2f}")
+print(f"P(No | conditions) = {p_no:.2f}")
+
+prediction = "Yes" if p_yes > p_no else "No"
+print("Prediction:", prediction)
+
+🟢 PART 3: Create Dataset
+
+5) Create CSV file
+
+> Create file: dataset.csv (same folder)
+
+6) Paste this data EXACTLY
+
+Age,Income,Student,CreditRating,BuysComputer
+<=30,High,No,Fair,No
+<=30,High,No,Excellent,No
+31-40,High,No,Fair,Yes
+>40,Medium,No,Fair,Yes
+>40,Low,Yes,Fair,Yes
+>40,Low,Yes,Excellent,No
+31-40,Low,Yes,Excellent,Yes
+<=30,Medium,No,Fair,No
+<=30,Low,Yes,Fair,Yes
+>40,Medium,Yes,Fair,Yes
+<=30,Medium,Yes,Excellent,Yes
+31-40,Medium,No,Excellent,Yes
+31-40,High,Yes,Fair,Yes
+>40,Medium,No,Excellent,No
+
+👉 Save file
+
+🟢 PART 4: Run Program
+
+7) Open Terminal
+
+Terminal → New Terminal
+8) Run command
+
+python bbn.py
+
+🟢 PART 5: Output
+
+✔ You will see:
+P(Yes | conditions) = 0.xx
+P(No | conditions) = 0.xx
+Prediction: Yes
+🧠 What is happening (simple)
+
+Program checks rows matching conditions:
+
+Student = Yes AND CreditRating = Fair
+Counts how many are Yes / No
+Calculates probability
+Chooses higher value
+
+🧠 VIVA (VERY IMPORTANT)
+❓ What is Bayesian Belief Network?
+
+👉 Graph-based model representing probabilistic relationships
+
+❓ What are nodes?
+
+👉 Variables (Student, CreditRating, BuysComputer)
+
+❓ What are edges?
+
+👉 Dependencies between variables
+
+❓ What are we computing?
+
+👉 Conditional probability:
+
+P(BuysComputer | Student, CreditRating)
+❓ Difference from Naive Bayes?
+Naive Bayes	BBN
+Assumes independence	Allows dependency
+Multiplication of probabilities	Conditional relationships
+⚠️ Common Mistakes
+❌ Wrong column names in conditions
+❌ CSV format error
+❌ File not in same folder
+🎯 RESULT
+Bayesian Belief Network was successfully implemented using Python.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+EXP7: To implement Adaboost
+
+🟢 PART 1: Setup
+
+1) Open Visual Studio Code
+
+(or Notepad + Command Prompt)
+
+2) Create folder
+> Create folder on Desktop
+> Name: adaboost
+
+3) Create Python file
+
+> Open folder in VS Code
+> Create file: adaboost.py
+
+🟢 PART 2: Add Code
+
+4) Paste the FINAL code 
+
+import csv
+import math
+
+# Load dataset
+def load_csv(filename):
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        next(reader)
+        data = [row for row in reader]
+    return data
+
+# Encode categorical values
+def encode(row):
+    age_map = {'<=30': 0, '31-40': 1, '>40': 2}
+    income_map = {'Low': 0, 'Medium': 1, 'High': 2}
+
+    age = age_map[row[0]]
+    income = income_map[row[1]]
+    student = 1 if row[2] == 'Yes' else 0
+    credit = 1 if row[3] == 'Excellent' else 0
+    label = 1 if row[4] == 'Yes' else -1
+
+    return [age, income, student, credit], label
+
+# Train decision stump
+def train_stump(X, y, weights):
+    n_features = len(X[0])
+    best_feature = 0
+    best_threshold = 0
+    best_polarity = 1
+    min_error = float('inf')
+
+    for feature in range(n_features):
+        values = set(x[feature] for x in X)
+
+        for thresh in values:
+            for polarity in [1, -1]:
+                error = 0
+
+                for i in range(len(X)):
+                    pred = polarity * (1 if X[i][feature] <= thresh else -1)
+                    if pred != y[i]:
+                        error += weights[i]
+
+                if error < min_error:
+                    min_error = error
+                    best_feature = feature
+                    best_threshold = thresh
+                    best_polarity = polarity
+
+    return best_feature, best_threshold, best_polarity, min_error
+
+# AdaBoost
+def adaboost(X, y, T=5):
+    n = len(X)
+    weights = [1/n] * n
+    classifiers = []
+
+    for _ in range(T):
+        feat, thresh, polarity, error = train_stump(X, y, weights)
+
+        eps = 1e-10
+        alpha = 0.5 * math.log((1 - error + eps) / (error + eps))
+
+        classifiers.append((feat, thresh, polarity, alpha))
+
+        # Update weights
+        for i in range(n):
+            pred = polarity * (1 if X[i][feat] <= thresh else -1)
+            weights[i] *= math.exp(-alpha * y[i] * pred)
+
+        # Normalize
+        total = sum(weights)
+        weights = [w / total for w in weights]
+
+    return classifiers
+
+# Predict
+def predict(x, classifiers):
+    final = 0
+    for feat, thresh, polarity, alpha in classifiers:
+        pred = polarity * (1 if x[feat] <= thresh else -1)
+        final += alpha * pred
+    return 1 if final > 0 else -1
+
+# -------- RUN --------
+
+data = load_csv("dataset.csv")
+
+X, y = [], []
+for row in data:
+    features, label = encode(row)
+    X.append(features)
+    y.append(label)
+
+model = adaboost(X, y, T=5)
+
+# Test input (same format as dataset)
+test_row = ['<=30', 'High', 'No', 'Excellent', '?']
+x_test, _ = encode(test_row)
+
+result = predict(x_test, model)
+
+print("Prediction:", "Yes" if result == 1 else "No")
+
+👉 Save file
+
+🟢 PART 3: Create Dataset
+
+5) Create CSV file
+
+> Create file: dataset.csv (same folder)
+
+6) Paste this EXACT dataset
+Age,Income,Student,CreditRating,BuysComputer
+<=30,High,No,Fair,No
+<=30,High,No,Excellent,No
+31-40,High,No,Fair,Yes
+>40,Medium,No,Fair,Yes
+>40,Low,Yes,Fair,Yes
+>40,Low,Yes,Excellent,No
+31-40,Low,Yes,Excellent,Yes
+<=30,Medium,No,Fair,No
+<=30,Low,Yes,Fair,Yes
+>40,Medium,Yes,Fair,Yes
+<=30,Medium,Yes,Excellent,Yes
+31-40,Medium,No,Excellent,Yes
+31-40,High,Yes,Fair,Yes
+>40,Medium,No,Excellent,No
+
+👉 Save
+
+🟢 PART 4: Run Program
+
+7) Open Terminal
+Terminal → New Terminal
+
+8) Run command
+python adaboost.py
+
+🟢 PART 5: Output
+
+✔ You will see:
+Prediction: Yes
+🧠 What is happening (VERY SIMPLE)
+
+AdaBoost works like this:
+
+Start with equal weights
+Train weak model (decision stump)
+Find mistakes
+Increase weight of wrong predictions
+Repeat multiple times
+Combine all models
+
+🧠 VIVA (VERY IMPORTANT)
+❓ What is AdaBoost?
+
+👉 Ensemble learning algorithm
+
+❓ What is “Boosting”?
+
+👉 Improving weak learners by focusing on errors
+
+❓ What is weak learner?
+
+👉 Simple model (decision stump)
+
+❓ What is alpha?
+
+👉 Importance of each model
+
+❓ Why weights?
+
+👉 To focus on hard-to-classify data
+
+⚠️ Common Mistakes
+❌ Wrong dataset format
+❌ Encoding mismatch
+❌ CSV not in same folder
+❌ Typo in categories (High vs high)
+
+🎯 RESULT
+AdaBoost algorithm was successfully implemented using Python.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+EXP8: To implement Random Forests
+
+🟢 PART 1: Setup
+
+1) Open Visual Studio Code
+
+(or Notepad + Command Prompt)
+
+2) Create folder
+> Create folder on Desktop
+> Name: random_forest
+
+3) Create Python file
+> Open folder in VS Code
+> Create file: random_forest.py
+
+🟢 PART 2: Add Code
+
+4) Paste the FINAL optimized code 
+
+import csv
+import random
+
+# Load dataset
+def load_csv(filename):
+    with open(filename, 'r') as file:
+        reader = csv.reader(file)
+        next(reader)
+        return [row for row in reader]
+
+# Encode categorical values
+def encode(row):
+    age_map = {'<=30': 0, '31-40': 1, '>40': 2}
+    income_map = {'Low': 0, 'Medium': 1, 'High': 2}
+
+    age = age_map[row[0]]
+    income = income_map[row[1]]
+    student = 1 if row[2] == 'Yes' else 0
+    credit = 1 if row[3] == 'Excellent' else 0
+    label = 1 if row[4] == 'Yes' else -1
+
+    return [age, income, student, credit], label
+
+# Gini impurity
+def gini(y):
+    total = len(y)
+    if total == 0:
+        return 0
+    p = sum(1 for i in y if i == 1) / total
+    return 1 - p*p - (1-p)*(1-p)
+
+# Split dataset
+def split(X, y, feature, threshold):
+    left_X, left_y, right_X, right_y = [], [], [], []
+    for i in range(len(X)):
+        if X[i][feature] <= threshold:
+            left_X.append(X[i])
+            left_y.append(y[i])
+        else:
+            right_X.append(X[i])
+            right_y.append(y[i])
+    return left_X, left_y, right_X, right_y
+
+# Build tree
+def build_tree(X, y, depth=0, max_depth=5):
+    if len(set(y)) == 1 or depth == max_depth:
+        return max(set(y), key=y.count)
+
+    best_feature, best_thresh, best_score = 0, 0, float('inf')
+
+    for f in range(len(X[0])):
+        values = set(x[f] for x in X)
+        for t in values:
+            lx, ly, rx, ry = split(X, y, f, t)
+            score = (len(ly)*gini(ly) + len(ry)*gini(ry)) / len(X)
+
+            if score < best_score:
+                best_feature, best_thresh, best_score = f, t, score
+                best_split = (lx, ly, rx, ry)
+
+    lx, ly, rx, ry = best_split
+
+    return ((best_feature, best_thresh),
+            build_tree(lx, ly, depth+1),
+            build_tree(rx, ry, depth+1))
+
+# Predict tree
+def predict_tree(tree, x):
+    if isinstance(tree, int):
+        return tree
+    feature, thresh = tree[0]
+    if x[feature] <= thresh:
+        return predict_tree(tree[1], x)
+    else:
+        return predict_tree(tree[2], x)
+
+# Random Forest
+def random_forest(X, y, n_trees=5):
+    forest = []
+
+    for _ in range(n_trees):
+        sample_X, sample_y = [], []
+        for _ in range(len(X)):
+            i = random.randint(0, len(X)-1)
+            sample_X.append(X[i])
+            sample_y.append(y[i])
+
+        tree = build_tree(sample_X, sample_y)
+        forest.append(tree)
+
+    return forest
+
+# Voting
+def predict_forest(forest, x):
+    preds = [predict_tree(tree, x) for tree in forest]
+    return max(set(preds), key=preds.count)
+
+# -------- RUN --------
+
+data = load_csv("dataset.csv")
+
+X, y = [], []
+for row in data:
+    features, label = encode(row)
+    X.append(features)
+    y.append(label)
+
+forest = random_forest(X, y, n_trees=5)
+
+# Test input
+test_row = ['<=30', 'High', 'Yes', 'Fair', '?']
+x_test, _ = encode(test_row)
+
+result = predict_forest(forest, x_test)
+
+print("Prediction:", "Yes" if result == 1 else "No")
+
+👉 Save file
+
+🟢 PART 3: Create Dataset
+
+5) Create CSV file
+> Create file: dataset.csv (same folder)
+
+6) Paste EXACT dataset
+Age,Income,Student,CreditRating,BuysComputer
+<=30,High,No,Fair,No
+<=30,High,No,Excellent,No
+31-40,High,No,Fair,Yes
+>40,Medium,No,Fair,Yes
+>40,Low,Yes,Fair,Yes
+>40,Low,Yes,Excellent,No
+31-40,Low,Yes,Excellent,Yes
+<=30,Medium,No,Fair,No
+<=30,Low,Yes,Fair,Yes
+>40,Medium,Yes,Fair,Yes
+<=30,Medium,Yes,Excellent,Yes
+31-40,Medium,No,Excellent,Yes
+31-40,High,Yes,Fair,Yes
+>40,Medium,No,Excellent,No
+
+👉 Save file
+
+🟢 PART 4: Run Program
+
+7) Open Terminal
+Terminal → New Terminal
+
+8) Run command
+python random_forest.py
+
+🟢 PART 5: Output
+
+✔ You will see:
+Prediction: Yes
+
+🧠 What is happening (VERY SIMPLE)
+
+Random Forest works like:
+
+Take random samples (bootstrap)
+Train multiple decision trees
+Each tree gives prediction
+Final result = majority vote
+🧠 VIVA (VERY IMPORTANT)
+❓ What is Random Forest?
+
+👉 Ensemble of multiple decision trees
+
+❓ Why better than single tree?
+
+👉 Reduces overfitting
+
+❓ What is bootstrap sampling?
+
+👉 Random sampling with replacement
+
+❓ What is voting?
+
+👉 Final prediction based on majority
+
+❓ Why “Forest”?
+
+👉 Many trees together 🌳🌳🌳
+
+⚠️ Common Mistakes
+❌ Wrong dataset format
+❌ Encoding mismatch
+❌ CSV not in same folder
+❌ Typo in values (High vs high)
+
+🎯 RESULT
+Random Forest algorithm was successfully implemented using Python.
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+EXP9: To implement K-means clustering
+
+
+
+-------------------------------------------------------------------------------------------------------------------------------------------------
+10	To implement BIRCH
+11	To implement DBSCAN
+12	To implement the Apriori algorithm
+13	To demonstrate reading from a database and analyzing data using Power BI

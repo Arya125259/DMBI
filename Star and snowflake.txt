@@ -65,6 +65,7 @@ FROM FactSales f
 JOIN DimCustomer c ON f.CustomerID = c.CustomerID
 JOIN DimProduct p ON f.ProductID = p.ProductID
 JOIN DimTime t ON f.TimeID = t.TimeID;
+
 ❄️ PART B: SNOWFLAKE SCHEMA
 🧱 STEP 6: NORMALIZED TABLES
 Category Table
